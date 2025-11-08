@@ -1,0 +1,14 @@
+node_modules
+.next
+out
+.git
+.gitignore
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-lock.yaml
+.DS_Store
+.env
+.env.*
+.vercel
+**/*.swp

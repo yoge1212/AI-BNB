@@ -1,0 +1,4 @@
+Flask==3.0.0
+python-dotenv==1.0.1
+supabase==2.6.0
+dedalus-labs>=0.1.0a9
