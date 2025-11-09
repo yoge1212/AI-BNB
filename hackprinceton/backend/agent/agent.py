@@ -3,6 +3,22 @@ from dedalus_labs import AsyncDedalus, DedalusRunner
 from dotenv import load_dotenv
 from dedalus_labs.utils.streaming import stream_async
 from .tools.find_stays import find_stays
+import json
+
+JSON_SCHEMA = {
+  "type": "object",
+  "required": ["title","description","beds","baths","amenities","property_type","highlights", "ai_tags"],
+  "additionalProperties": False,
+  "properties": {
+    "title": {"type": "string", "minLength": 3, "maxLength": 120},
+    "description": {"type": "string", "minLength": 20, "maxLength": 1200},
+    "beds": {"type": "integer", "minimum": 0, "maximum": 20},
+    "baths": {"type": "number", "minimum": 0, "maximum": 20},
+    "amenities": {"type": "array", "items": {"type": "string"}, "maxItems": 25},
+    "property_type": {"type": "string"},
+    "ai_tags": {"type": "array", "items": {"type": "string"}, "maxItems": 10}
+  }
+}
 
 load_dotenv()
 
@@ -78,6 +94,46 @@ async def main(input):
     )
 
     _conversation_cache += "User: " + input + "\n" + "AI BNB: " + result.final_output + "\n"
+
+    return result.final_output
+
+async def create_listing_agent(images):
+    client = AsyncDedalus()
+    runner = DedalusRunner(client)
+
+    # Create prompt for the agent
+    prompt = f"""
+You are an AI property analyzer.
+
+YOU WILL RETURN **ONLY** JSON. DO NOT include code fences, markdown, comments, or any text before/after the JSON.
+
+JSON schema (for reference — do not include this in the output):
+{json.dumps(JSON_SCHEMA)}
+
+Fields to output:
+- title (string)
+- description (string)
+- beds (integer)
+- baths (number)
+- amenities (string[])
+- property_type (string)
+- ai_tags (string[])
+
+Rules:
+- Output valid UTF-8 JSON. No trailing commas. No NaN/Infinity. No comments.
+- Do not guess wildly; if a value is unclear from images, choose a reasonable conservative value (e.g., 0 beds/baths) and keep description honest.
+- Limit description to 2–5 sentences.
+- Use short phrases for highlights.
+- Property type must be one of: "Single Family Home", "Condo", "Townhouse", "Apartment", or "Other" if uncertain.
+
+Images to analyze (URLs):
+{images}
+"""
+
+    result = await runner.run(
+        prompt,
+        model="gpt-4o-mini",  # Use GPT-4o for image understanding
+    )
 
     return result.final_output
 
