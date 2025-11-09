@@ -138,7 +138,6 @@ cd ai-bnb
     <img class="badge" src="https://img.shields.io/badge/Flask-black?style=for-the-badge&logo=flask" alt="Flask" />
     <img class="badge" src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai" alt="OpenAI" />
     <img class="badge" src="https://img.shields.io/badge/Dedalus_Labs-blue?style=for-the-badge" alt="Dedalus Labs" />
-    <img class="badge" src="https://img.shields.io/badge/Vercel-black?style=for-the-badge&logo=vercel" alt="Vercel" />
   </div>
 
   <h2>👥 Team</h2>
