@@ -22,6 +22,10 @@ export default function ChatBox() {
     const trimmed = input.trim();
     if (!trimmed || loading) return;
 
+    // We save the history *before* adding the new message.
+    // This is what the agent's prompt expects.
+    const currentHistory = messages;
+
     setMessages((prev) => [...prev, { role: "user" as const, content: trimmed }]);
     setInput("");
     setLoading(true);
@@ -30,26 +34,40 @@ export default function ChatBox() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: trimmed }),
+        //
+        // --- THIS IS THE FIX ---
+        // We now send both the new message and the entire chat history.
+        //
+        body: JSON.stringify({
+          message: trimmed,
+          history: currentHistory, // <-- This was missing
+        }),
       });
 
       if (!res.ok) {
         const text = await res.text();
+        // This 'text' will be the JSON error from your Flask app
+        // e.g., "{"error": "Backend error", "ok": false}"
+        console.error("Server Error Response:", text);
         throw new Error(text || "Request failed");
       }
 
       const data = (await res.json()) as { reply: string };
       setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
     } catch (err: unknown) {
+      // The catch block now shows a more useful error
       setMessages((prev) => [
         ...prev,
-        { role: "assistant", content: "Sorry, something went wrong." },
+        {
+          role: "assistant",
+          content: `Sorry, something went wrong. ${err instanceof Error ? err.message : ""}`,
+        },
       ]);
-      // Optionally log error
       console.error(err);
     } finally {
       setLoading(false);
     }
+    console.log(messages);
   }
 
   return (
