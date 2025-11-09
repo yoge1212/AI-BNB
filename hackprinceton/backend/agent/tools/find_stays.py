@@ -15,7 +15,7 @@ def find_stays(destination: str, budget_per_night: float) -> list:
         .select("*")
         .ilike("location", f"%{destination}%")
         .lte("price", budget_per_night)
-        .limit(3)
+        .limit(10)
         .execute()
     )
     return query.data

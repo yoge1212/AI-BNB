@@ -1,86 +1,61 @@
 import asyncio
+import json
 from dedalus_labs import AsyncDedalus, DedalusRunner
 from dotenv import load_dotenv
 from dedalus_labs.utils.streaming import stream_async
-from .tools.find_stays import find_stays
 
+# Load environment variables (like DEDALUS_API_KEY)
 load_dotenv()
 
-_conversation_cache = "Start of conversation\n\n"
-
-def make_prompt(input, context):
+def make_prompt(input, chat_history_list):
+    # We build a simple text-based history for the prompt
     return f"""
-You are **AI BNB**, an intelligent travel planning agent that helps users find, recommend, and book stays.
+You are AI BNB, an intelligent travel planning agent that helps users understand what they want do during trips, and their requirements for AirBnB(s).
 
-You have access to specialized tools such as:
-- `find_stays`: Search available listings in Supabase based on structured trip details.
+🎯 Your Mission
 
----
+You MUST retrieve the following trip information from the user:
+    * `destination(s)`
+    * `dates`
+    * `guest_count`
+    * `AirBnB Number of rooms`
+    * `AirBnB Price constraints`
+    * `Any other preferences or requirements `
 
-## 🎯 Your Mission
-Given the following trip information:
 
+Ask for and only mention one piece of information at a time, and if they mention they don't know, take initiative and provide guidance and recommendations for that specific item until the user reaches an answer.
+
+You remember the user's previous context (destination, group size, preferences) if provided earlier.
+Use this to avoid asking redundant questions:
+{chat_history_list}
+
+The user has just said:
 {input}
 
-1. **If a clear destination or region is mentioned:**
-   - Use the `find_stays` tool to fetch suitable stays that match the trip context.
-   - Include relevant filters such as group size, price, beds, baths, and amenities if present.
+Help the users make decisions as well with the following MCP servers you have access to:
+- joerup/exa-mcp -> Useful for getting up-to-date information on various topics.
+- windsor/brave-search-mcp -> Useful for searching the web for current information.
+- joerup/open-meteo-mcp -> Useful for getting current weather information.
 
-2. **If the destination is unclear or missing:**
-   - Use your MCP servers or internal reasoning to suggest a few relevant destinations.
-   - Justify why each destination fits the user’s intent (e.g. “You mentioned warm weather, so Miami or San Diego are great fits.”).
+If the user has provided all information, output WORD FOR WORD OR U DIE, 'Thanks! I have all the information I need.' and under it what their trip details are in conjunction with the list above.
 
-3. **If user details are incomplete:**
-   - Ask one concise clarifying question to gather missing information.
-   - Do *not* overwhelm the user — ask one follow-up at a time.
-
-4. **After using tools:**
-   - Present your response in a clear, human-friendly format.
-   - Summarize findings conversationally, e.g.:
-     “Here are 3 places that match your trip perfectly 🏖️”
-     Include short highlights (price, location, amenities).
-   - Avoid showing raw JSON or SQL data.
-
----
-
-You remember the user’s previous trip context (destination, group size, preferences) if provided earlier.
-Use this to avoid asking redundant questions:
-
-{context}
-
-## 💬 Output Style
-- Be conversational, warm, and travel-oriented.
-- Use emojis to add life (e.g. 🌴, 🏔️, 🏡, 🍽️).
-- Never mention tool names, APIs, or JSON.
-- Only show listings once enough trip context is known (destination, dates, guests, and budget).
-
----
-
-Now process the user’s trip info and decide what to do next.
-If ready, use your tools to find the best stays or experiences.
-Otherwise, ask a clarifying question to continue the conversation.
+Format all outputs too look aesthetically pleasing, easy to read (use new lines as needed) and as concise as possible.
 """
 
-async def main(input):
-    global _conversation_cache
+
+async def main(input, chat_history):
     client = AsyncDedalus()
     runner = DedalusRunner(client)
 
     result = await runner.run(
-        make_prompt(input, _conversation_cache),
-        tools = [find_stays],
+        make_prompt(input, chat_history),
+        tools = [],
         model="gpt-4o",
         mcp_servers=[
-            "joerup/exa-mcp",        # For semantic travel research
-            "windsor/brave-search-mcp", # For travel information search
-            "joerup/open-meteo-mcp"   # For weather at destination
+            "joerup/exa-mcp",
+            "windsor/brave-search-mcp",
+            "joerup/open-meteo-mcp"
         ]
     )
-
-    _conversation_cache += "User: " + input + "\n" + "AI BNB: " + result.final_output + "\n"
-
+    
     return result.final_output
-
-if __name__ == "__main__":
-    output = asyncio.run(main())
-    print(f"Travel Planning Results:\n{output}")
