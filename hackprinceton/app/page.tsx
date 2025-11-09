@@ -1,16 +1,16 @@
 
-import ChatBox from "@/components/chat-box";
+import Trips from "@/components/trips";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
 
 export default async function Home() {
   const supabase = await createClient();
-  
-    const { data, error } = await supabase.auth.getClaims();
-    if (error || !data?.claims) {
-      redirect("/auth/login");
-    }
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user?.id) {
+    redirect("/auth/login");
+  }
+
 
   return (
     <main className="min-h-screen flex flex-col items-center">
@@ -21,7 +21,7 @@ export default async function Home() {
           
            
             <div className="mt-8">
-              <ChatBox />
+              <Trips userId={user?.id} />
             </div>
           </main>
         </div>
