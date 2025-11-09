@@ -9,10 +9,11 @@ export async function POST(req: Request) {
     // --- FIX 1: Read BOTH 'message' and 'history' ---
     const body = (await req.json()) as {
       message?: string;
-      history?: any[]; // <-- Read the history
+      history?: Array<{ role: string; content: string }>;
+      user_id?: string;
     };
 
-    const { message, history } = body;
+    const { message, history, user_id } = body;
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Missing 'message'" }, { status: 400 });
@@ -26,11 +27,18 @@ export async function POST(req: Request) {
       );
     }
 
+    if (!user_id || typeof user_id !== "string") {
+      return NextResponse.json(
+        { error: "Missing 'user_id'" },
+        { status: 400 },
+      );
+    }
+
     const backendRes = await fetch(BACKEND_CHAT_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       // --- FIX 3: Send BOTH 'message' and 'history' to Flask ---
-      body: JSON.stringify({ message, history }),
+      body: JSON.stringify({ message, history, user_id }),
     });
 
     if (!backendRes.ok) {
@@ -47,8 +55,14 @@ export async function POST(req: Request) {
       output?: string;
       error?: string;
       reply?: string;
+      trip?: boolean;
+      trip_response?: unknown;
       [k: string]: unknown;
     };
+
+    if (data && "trip" in data && data.trip) {
+      return NextResponse.json(data);
+    }
 
     if (data && data.ok === false) {
       return NextResponse.json(

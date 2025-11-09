@@ -6,7 +6,7 @@ from .agent.tools.fetch_trips import fetch_trips
 from .agent.tools.fetch_trip import fetch_trip
 from .agent.tools.update_trip import update_trip
 from .agent.tools.fetch_user import fetch_user
-from .agent.tools.add_trip_member import add_trip_member
+from .agent.tools.add_trip import add_trip_tool
 import os
 import sys
 
@@ -110,7 +110,7 @@ def query_agent():
             routes_response_string = asyncio.run(routes_main(ai_response_string, user_id))
             print(routes_response_string)
             trip_response_string = asyncio.run(itinerary_main(routes_response_string))
-            print(trip_response_string)
+            return jsonify({"trip": True, "trip_response": trip_response_string})
 
 
         # 4. Send back the AI's string reply
@@ -214,7 +214,7 @@ if __name__ == '__main__':
 
 
 
-@app.route("/add-trip-member", methods=["GET"])
+@app.route("/add-trip", methods=["GET"])
 def add_trip():
     try:
         trip_id = request.args.get("trip_id")
@@ -223,7 +223,7 @@ def add_trip():
             return jsonify({"ok": False, "error": "Missing trip_id"}), 400
         if not user_email:
             return jsonify({"ok": False, "error": "Missing user_email"}), 400
-        output = add_trip_member(trip_id, user_email)
+        output = add_trip_tool(trip_id, user_email)
         return jsonify({"ok": True, "user": output}), 200
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
