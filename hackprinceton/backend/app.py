@@ -50,6 +50,26 @@ except ModuleNotFoundError:
         except Exception as e:
             print(f"FATAL: Could not import agent after modifying path: {e}")
             routes_main = None # Make it fail loudly if import doesn't work
+
+try:
+    # This works when 'agent' is a direct sub-module
+    from agent.itinerary import main as itinerary_main
+except ModuleNotFoundError:
+    try:
+        # This might work in other local setups
+        from backend.agent.itinerary import main as itinerary_main
+    except ModuleNotFoundError:
+        # This is the fallback for tricky path issues
+        print("Could not find agent, modifying path...")
+        # Get the directory where this app.py file lives
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        sys.path.append(current_dir)
+        try:
+            from agent.itinerary import main as itinerary_main
+            print("Successfully imported agent from modified path.")
+        except Exception as e:
+            print(f"FATAL: Could not import agent after modifying path: {e}")
+            itinerary_main = None # Make it fail loudly if import doesn't work
 # --- END ---
 
 app = Flask(__name__)
@@ -69,6 +89,7 @@ def query_agent():
         data = request.get_json()
         user_message = data.get('message')
         chat_history = data.get('history') # <-- 1. Get the history list
+        user_id = data.get('user_id')
 
         # 2. Check for missing data
         if user_message is None or chat_history is None:
@@ -86,9 +107,11 @@ def query_agent():
             print(chat_history)
             print(ai_response_string)
             # CALL ROUTES AGENT
-            routes_response_string = asyncio.run(routes_main(ai_response_string))
-       
+            routes_response_string = asyncio.run(routes_main(ai_response_string, user_id))
             print(routes_response_string)
+            trip_response_string = asyncio.run(itinerary_main(routes_response_string))
+            print(trip_response_string)
+
 
         # 4. Send back the AI's string reply
         return jsonify({"ok": True, "reply": ai_response_string})

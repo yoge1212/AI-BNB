@@ -1,23 +1,59 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { FormEvent, ChangeEvent, useState, useRef, useEffect } from "react";
+import { User, AuthChangeEvent, Session } from '@supabase/supabase-js';
+import React from 'react';
 
 type ChatMessage = {
   role: "user" | "assistant";
   content: string;
 };
 
+interface MessageResponse {
+  ok: boolean;
+  output: string;
+}
+
 export default function ChatBox() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const endRef = useRef<HTMLDivElement | null>(null);
+  const [input, setInput] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
+  const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+    
+    // Get initial user
+    const initUser = async () => {
+      try {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        setUser(currentUser);
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    };
+    
+    initUser();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event: AuthChangeEvent, session: Session | null) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  async function sendMessage(e: React.FormEvent) {
+  async function sendMessage(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const trimmed = input.trim();
     if (!trimmed || loading) return;
@@ -26,21 +62,22 @@ export default function ChatBox() {
     // This is what the agent's prompt expects.
     const currentHistory = messages;
 
-    setMessages((prev) => [...prev, { role: "user" as const, content: trimmed }]);
+    setMessages((prev: ChatMessage[]) => [...prev, { role: "user" as const, content: trimmed }]);
     setInput("");
     setLoading(true);
 
     try {
+      if (!user) {
+        throw new Error("Please log in to send messages");
+      }
+
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        //
-        // --- THIS IS THE FIX ---
-        // We now send both the new message and the entire chat history.
-        //
         body: JSON.stringify({
           message: trimmed,
-          history: currentHistory, // <-- This was missing
+          history: currentHistory,
+          user_id: user.id  // Now we know user exists
         }),
       });
 
@@ -53,10 +90,10 @@ export default function ChatBox() {
       }
 
       const data = (await res.json()) as { reply: string };
-      setMessages((prev) => [...prev, { role: "assistant", content: data.reply }]);
+      setMessages((prev: ChatMessage[]) => [...prev, { role: "assistant", content: data.reply }]);
     } catch (err: unknown) {
       // The catch block now shows a more useful error
-      setMessages((prev) => [
+      setMessages((prev: ChatMessage[]) => [
         ...prev,
         {
           role: "assistant",
@@ -76,7 +113,7 @@ export default function ChatBox() {
         {messages.length === 0 ? (
           <p className="text-sm text-muted-foreground">Start a conversation below.</p>
         ) : (
-          messages.map((m, idx) => (
+          messages.map((m: ChatMessage, idx: number) => (
             <div
               key={idx}
               className={
@@ -96,7 +133,7 @@ export default function ChatBox() {
           className="flex-1 bg-transparent outline-none px-3 py-2 rounded-md border"
           placeholder="Type your message..."
           value={input}
-          onChange={(e) => setInput(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => setInput(e.target.value)}
           disabled={loading}
         />
         <button
