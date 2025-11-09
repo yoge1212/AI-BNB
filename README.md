@@ -33,7 +33,6 @@
 </td>
       </tr>
     </table>
-    <p><em>Add your screenshots in <code>/public</code> or <code>/assets</code> and update the paths above.</em></p>
   </div>
 
   <h2>💡 Inspiration</h2>
