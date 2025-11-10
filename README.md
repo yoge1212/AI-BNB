@@ -7,7 +7,7 @@
 
   <blockquote>
     <p><strong>AI BNB</strong> reimagines Airbnb as if it were founded in 2025 — powered entirely by AI.<br>
-    A chat-first platform where travelers describe their ideal trip, and AI plans, finds, and books the perfect stay — while hosts can generate listings from just a few photos.</p>
+    A chat-first platform where travelers describe their ideal trip, and AI plans, finds, books the perfect stay, and hosts can generate listings from just a few photos.</p>
   </blockquote>
 
   <h2>🌍 Demo</h2>
@@ -22,7 +22,7 @@
       <tr>
         <th>Chat Interface</th>
         <th>AI-Generated Listing</th>
-        <th>Host Flow</th>
+        <th>Trip Flow</th>
       </tr>
       <tr>
         <td><img width="1470" height="829" alt="main" src="https://github.com/user-attachments/assets/10ec85b6-f85b-4f5b-8f8e-1abcbfb39a98" />
@@ -49,7 +49,7 @@
   <h3>🏠 For Hosts</h3>
   <ul>
     <li>Upload photos, and the AI generates the full listing (title, description, amenities, price).</li>
-    <li>Preview and publish instantly to Supabase.</li>
+    <li>Preview and publish instantly</li>
   </ul>
 
   <h2>🏗️ How We Built It</h2>
@@ -83,9 +83,7 @@ Database (Supabase)
 </code></pre>
 
   <h2>⚔️ Challenges We Faced</h2>
-  <p>We’re a team of only <strong>two hackers</strong>, and building a full-stack AI product in 36 hours wasn’t easy:</p>
   <ul>
-    <li>Debugging dependency conflicts between Python and JS frameworks</li>
     <li>Learning and implementing agentic AI workflows</li>
     <li>Integrating Flask, Supabase, and Next.js seamlessly</li>
     <li>Balancing design, backend logic, and AI orchestration between two people</li>
@@ -110,10 +108,10 @@ Database (Supabase)
 
   <h2>🚀 What’s Next</h2>
   <ul>
-    <li>📱 Mobile app for iOS and Android</li>
     <li>🧭 Live itinerary updates based on weather or flight changes</li>
     <li>🧩 More integrations (Booking.com, TripAdvisor, Google Places)</li>
     <li>💳 Stripe payments for real bookings</li>
+    <li>📱 Mobile app for iOS and Android</li>
   </ul>
 
   <blockquote>Our mission is simple: <strong>Turn the pain of planning into the joy of anticipation.</strong></blockquote>
@@ -140,11 +138,11 @@ cd ai-bnb
   </div>
 
   <h2>👥 Team</h2>
-  <table>
-    <tr><th>Name</th></tr>
-    <tr><td><strong>Yogesh Sampathkumar</strong></td></tr>
-    <tr><td><strong>Jessie Singh</strong></td>/tr>
-  </table>
+ <table>
+  <tr><th>Name</th></tr>
+  <tr><td><strong>Yogesh Sampathkumar</strong></td></tr>
+  <tr><td><strong>Jessie Singh</strong></td></tr>
+</table>
 
   <h2>❤️ Acknowledgements</h2>
   <p>Special thanks to <strong>Dedalus Labs</strong>, and our mentors.</p>
